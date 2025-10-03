@@ -33,7 +33,7 @@ exports.handler = async function(event, context) {
             return { statusCode: 400, body: JSON.stringify({ error: 'Thiếu câu hỏi.' }) };
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image-preview" });
         const systemPrompt = lessonPrompts[lesson_id] || lessonPrompts['default'];
         const fullPrompt = `${systemPrompt}\n\nCâu hỏi của học sinh: "${question}"`;
 
@@ -54,4 +54,5 @@ exports.handler = async function(event, context) {
             body: JSON.stringify({ error: 'Lỗi từ dịch vụ AI.' }),
         };
     }
+
 };
