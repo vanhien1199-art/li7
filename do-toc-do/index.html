@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 9: Thực hành Đo tốc độ</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <script>
+        window.lessonId = 'thuc-hanh-do-toc-do';
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatWindow = document.getElementById('chat-window');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const AI_SERVICE_URL = 'https://ai-trung-tam-service.onrender.com';
+            const LESSON_ID = window.lessonId || 'default';
+            if(sendButton){
+                sendButton.addEventListener('click', askAI);
+                userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') askAI(); });
+            }
+            function addMessageToChat(text, className) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('chat-message', className);
+                chatWindow.appendChild(messageElement);
+                messageElement.innerHTML = marked.parse(text);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                return messageElement;
+            }
+            async function askAI() {
+                const question = userInput.value.trim();
+                if (!question) return;
+                addMessageToChat(question, 'user-message');
+                userInput.value = '';
+                const waitingMessage = addMessageToChat('Trợ lý AI đang suy nghĩ...', 'ai-message');
+                try {
+                    const response = await fetch(`${AI_SERVICE_URL}/ask`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ question: question, lesson_id: LESSON_ID })
+                    });
+                    if (!response.ok) throw new Error('Lỗi mạng hoặc server');
+                    const data = await response.json();
+                    waitingMessage.innerHTML = marked.parse(data.answer);
+                } catch (error) {
+                    waitingMessage.innerHTML = marked.parse('**Xin lỗi, đã có lỗi xảy ra!**');
+                }
+            }
+        });
+    </script>
+
+    <style>
+        :root {
+            --primary-color: #2196F3; /* Xanh dương sáng */
+            --secondary-color: #FFC107; /* Vàng */
+            --bg-color: #f0f4f8;
+            --card-bg-color: #ffffff;
+            --text-color: #333;
+            --correct-color: #4caf50;
+            --incorrect-color: #f44336;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.7; background-color: var(--bg-color); color: var(--text-color); margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        header { background: linear-gradient(90deg, var(--primary-color), #64b5f6); color: white; padding: 1.5rem 1rem; text-align: center; margin-bottom: 30px; position: relative; }
+        header h1 { margin: 0; font-size: 2.5em; }
+        .card { background-color: var(--card-bg-color); border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); padding: 30px; margin-bottom: 30px; }
+        h2, h3, h4 { color: var(--primary-color); }
+        h2 { border-bottom: 3px solid var(--secondary-color); padding-bottom: 10px; margin-top: 0; }
+        button { background-color: var(--secondary-color); color: var(--text-color); border: none; padding: 10px 20px; font-size: 1em; border-radius: 5px; cursor: pointer; transition: all 0.3s ease; }
+        button:hover { background-color: #ffb300; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        input[type="number"] { padding: 8px; border-radius: 5px; border: 1px solid #ccc; margin: 0 5px; }
+        
+        .home-btn { position: absolute; top: 50%; left: 20px; transform: translateY(-50%); font-size: 28px; color: white; text-decoration: none; opacity: 0.8; transition: opacity 0.3s, transform 0.3s; }
+        .home-btn:hover { opacity: 1; transform: translateY(-50%) scale(1.1); }
+
+        /* Mô phỏng */
+        .simulation-area { background-color: #e3f2fd; padding: 20px; border-radius: 8px; }
+        .track { position: relative; height: 80px; background-color: #bdbdbd; border: 2px solid #757575; margin: 20px 0; }
+        .track-line { position: absolute; top: 0; height: 100%; width: 3px; background-color: white; }
+        .start-line { left: 10%; }
+        .finish-line { left: 90%; }
+        .car { position: absolute; top: 50%; transform: translateY(-50%); width: 60px; height: 30px; background-color: var(--incorrect-color); border-radius: 5px; left: 2%; transition: left 4s linear; }
+        .car.moving { left: 95%; }
+        .photogate { position: absolute; top: -10px; height: 100px; width: 10px; background-color: #424242; }
+        .controls, .results { margin-top: 15px; }
+        .timer-display { background-color: #333; color: #00ff00; font-family: 'Courier New', Courier, monospace; font-size: 2em; padding: 10px; text-align: center; border-radius: 5px; letter-spacing: 2px; }
+        .report-table { width: 100%; margin-top: 15px; }
+        
+        /* Luyện tập */
+        .exercise-item { border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px; }
+        .feedback { margin-top: 10px; font-weight: bold; }
+        .feedback.correct { color: var(--correct-color); }
+        .feedback.incorrect { color: var(--incorrect-color); }
+
+        /* CSS Chatbot, Footer, Back-to-Top */
+        .chat-window { height: 300px; border: 1px solid #ccc; padding: 10px; overflow-y: auto; margin-bottom: 10px; }
+        .chat-message { margin-bottom: 10px; } .user-message { text-align: right; }
+        .ai-message { background-color: #f1f1f1; padding: 10px; border-radius: 8px; display: inline-block; max-width: 90%; text-align: left; }
+        .chat-input-area { display: flex; gap: 10px; } .chat-input-area input { flex-grow: 1; }
+        .site-footer { background-color: #333; color: #f1f1f1; padding: 30px 0; font-size: 0.9em; }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .site-footer h4 { color: var(--secondary-color); } .site-footer ul { list-style-type: none; padding: 0; }
+        .site-footer a { color: #f1f1f1; text-decoration: none; } .site-footer a:hover { color: var(--secondary-color); }
+        #back-to-top-btn { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 999; background-color: var(--secondary-color); color: var(--text-color); cursor: pointer; padding: 10px; border-radius: 50%; font-size: 10px; width: 20px; height: 20px; text-align: center; line-height: 30px; text-decoration: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2); border: none;}
+        #back-to-top-btn:hover { background-color: var(--primary-color); color: white; }
+    </style>
+</head>
+<body id="page-top">
+    <header>
+        <a href="/" class="home-btn" title="Về trang chủ">🏠</a>
+        <h1>Bài 9: THỰC HÀNH ĐO TỐC ĐỘ</h1>
+    </header>
+
+    <div class="container">
+        <section id="phan1" class="card">
+            <h2>Phần I: Mô phỏng "Đo tốc độ bằng Đồng hồ bấm giây"</h2>
+            <p>Trong thí nghiệm này, em sẽ tự tay bấm giờ để đo thời gian một chiếc xe đi hết quãng đường <strong>s = 80 cm (0.8 m)</strong> và nhận ra sai số do phản xạ của con người.</p>
+            <div class="simulation-area">
+                <div class="track">
+                    <div class="track-line start-line"></div>
+                    <div class="track-line finish-line"></div>
+                    <div id="car1" class="car"></div>
+                </div>
+                <div class="controls">
+                    <button id="start-car1">Cho xe chạy</button>
+                    <button id="stopwatch-btn">Bấm giờ (Bắt đầu/Dừng)</button>
+                    <button id="reset-sim1">Làm lại</button>
+                </div>
+                <div class="results">
+                    <h4>Đồng hồ bấm giây của bạn:</h4>
+                    <div id="stopwatch-display" class="timer-display">00:00.000</div>
+                    <div id="result-sim1" class="feedback" style="display:none;"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="phan2" class="card">
+            <h2>Phần II: Mô phỏng "Đo tốc độ bằng Cổng quang điện"</h2>
+            <p>Phương pháp này sử dụng hai cổng quang điện để đo thời gian một cách tự động và chính xác. Quãng đường vẫn là <strong>s = 80 cm (0.8 m)</strong>.</p>
+             <div class="simulation-area">
+                <div class="track">
+                    <div class="track-line start-line"><div class="photogate"></div></div>
+                    <div class="track-line finish-line"><div class="photogate"></div></div>
+                    <div id="car2" class="car"></div>
+                </div>
+                <div class="controls">
+                    <button id="start-car2">Cho xe chạy</button>
+                    <button id="reset-sim2">Làm lại</button>
+                </div>
+                <div class="results">
+                    <h4>Đồng hồ đo thời gian hiện số:</h4>
+                    <div id="photogate-display" class="timer-display">00:00.000</div>
+                     <div id="result-sim2" class="feedback" style="display:none;"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="phan3" class="card">
+            <h2>Phần III: Kiến thức cốt lõi cần nhớ</h2>
+            <ul>
+                <li><strong>Công thức tính tốc độ:</strong> <code>v = s / t</code>, trong đó v là tốc độ, s là quãng đường, t là thời gian.</li>
+                <li><strong>Các bước đo tốc độ của một vật:</strong>
+                    <ol>
+                        <li>Dùng thước để xác định một quãng đường <strong>s</strong>. Đánh dấu điểm xuất phát và điểm đích.</li>
+                        <li>Dùng đồng hồ bấm giây hoặc cổng quang điện để đo thời gian <strong>t</strong> vật đi hết quãng đường s.</li>
+                        <li>Dùng công thức <code>v = s / t</code> để tính tốc độ.</li>
+                    </ol>
+                </li>
+                <li><strong>Các thiết bị đo tốc độ thường dùng:</strong> Đồng hồ bấm giây, đồng hồ đo thời gian hiện số kết hợp cổng quang điện, thiết bị "bắn tốc độ" (súng laze).</li>
+            </ul>
+        </section>
+
+        <section id="ai-chatbot-card" class="card">
+            <h3>🤖 Trợ lý AI</h3>
+            <p>Bạn có thắc mắc gì về các phương pháp đo tốc độ hay sai số trong thí nghiệm không?</p>
+            <div id="chat-window" class="chat-window"></div>
+            <div class="chat-input-area">
+                <input type="text" id="user-input" placeholder="Ví dụ: Cổng quang điện là gì?">
+                <button id="send-button">Gửi</button>
+            </div>
+        </section>
+
+        <section id="phan4" class="card">
+            <h2>Phần IV: Luyện tập và Vận dụng</h2>
+            <div class="exercise-item">
+                <h4>Bài 1 (Tính toán):</h4>
+                <p>Một người đi xe đạp đi được quãng đường 450 m hết 1,5 phút. Tính tốc độ của người đó ra m/s.</p>
+                <input type="number" id="ex1-answer" placeholder="Đáp án (m/s)">
+                <button onclick="checkEx1()">Kiểm tra</button>
+                <div id="feedback-ex1" class="feedback"></div>
+            </div>
+            <div class="exercise-item">
+                <h4>Bài 2 (Phân tích sai số):</h4>
+                <p>Trong thí nghiệm đo tốc độ bằng đồng hồ bấm giây, sai số lớn nhất thường gây ra bởi yếu tố nào?</p>
+                <div><label><input type="radio" name="ex2" value="a"> Thước đo quãng đường s có độ chia quá lớn.</label></div>
+                <div><label><input type="radio" name="ex2" value="b" data-correct="true"> Phản xạ của người bấm giờ khi bắt đầu và kết thúc.</label></div>
+                <div><label><input type="radio" name="ex2" value="c"> Ma sát của bánh xe với mặt đường.</label></div>
+                <div id="feedback-ex2" class="feedback"></div>
+            </div>
+            <div class="exercise-item">
+                <h4>Bài 3 (Vận dụng):</h4>
+                <p>Một thiết bị bắn tốc độ ghi nhận một ô tô mất 0,2 s để đi qua hai vạch mốc cách nhau 5 m. Hỏi tốc độ của ô tô là bao nhiêu km/h và có vượt quá giới hạn 80 km/h không?</p>
+                <button onclick="toggleSolution('sol3')">Xem đáp án và giải thích</button>
+                <div class="solution" id="sol3">
+                    <p><strong>Giải:</strong></p>
+                    <p>Tốc độ của ô tô là: v = s / t = 5 m / 0.2 s = 25 m/s.</p>
+                    <p>Đổi ra km/h: v = 25 * 3.6 = 90 km/h.</p>
+                    <p><strong>Kết luận:</strong> Tốc độ 90 km/h đã vượt quá giới hạn 80 km/h.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div><h4>Nguồn tham khảo</h4><ul><li>Sách giáo khoa KHTN 8 - Bộ sách Kết nối tri thức.</li></ul></div>
+                <div><h4>Về trang web</h4><ul><li><a href="/">Về trang danh sách học liệu</a></li></ul></div>
+                <div><h4>Bản quyền & Liên hệ</h4><p>&copy; <span id="copyright-year"></span>-NungVanHien</p><p>Góp ý: <a href="mailto:gopy@example.com">vanhien1199@gmail.com</a></p></div>
+            </div>
+        </div>
+    </footer>
+    <a href="#page-top" id="back-to-top-btn" title="Lên đầu trang">⬆️</a>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- PHẦN I: MÔ PHỎNG ĐỒNG HỒ BẤM GIÂY ---
+        const car1 = document.getElementById('car1');
+        const startCar1Btn = document.getElementById('start-car1');
+        const stopwatchBtn = document.getElementById('stopwatch-btn');
+        const stopwatchDisplay = document.getElementById('stopwatch-display');
+        const resultSim1 = document.getElementById('result-sim1');
+        const resetSim1Btn = document.getElementById('reset-sim1');
+
+        let isCar1Moving = false, isTimerRunning = false;
+        let timerStartTime, timerInterval;
+        const s = 0.8; // m
+        const actual_t1 = 4.0; // 4 giây
+        
+        startCar1Btn.addEventListener('click', () => {
+            if (isCar1Moving) return;
+            car1.classList.add('moving');
+            isCar1Moving = true;
+            startCar1Btn.disabled = true;
+        });
+
+        stopwatchBtn.addEventListener('click', () => {
+            if (!isCar1Moving) return;
+            if (!isTimerRunning) { // Bắt đầu bấm giờ
+                isTimerRunning = true;
+                timerStartTime = Date.now();
+                timerInterval = setInterval(() => {
+                    const elapsed = Date.now() - timerStartTime;
+                    stopwatchDisplay.textContent = new Date(elapsed).toISOString().slice(14, 23);
+                }, 1);
+                stopwatchBtn.textContent = "Dừng giờ";
+            } else { // Dừng bấm giờ
+                clearInterval(timerInterval);
+                const user_t = (Date.now() - timerStartTime) / 1000;
+                const user_v = s / user_t;
+                const actual_v = s / actual_t1;
+                const error = Math.abs(user_t - actual_t1);
+
+                resultSim1.style.display = 'block';
+                resultSim1.innerHTML = `Thời gian bạn đo: <strong>${user_t.toFixed(3)} s</strong>. Tốc độ bạn tính: <strong>${user_v.toFixed(3)} m/s</strong>.<br>
+                                        Thời gian thực tế: <strong>${actual_t1.toFixed(3)} s</strong>. Tốc độ thực tế: <strong>${actual_v.toFixed(3)} m/s</strong>.<br>
+                                        Sai số thời gian: <strong>${error.toFixed(3)} s</strong>.`;
+                stopwatchBtn.disabled = true;
+            }
+        });
+
+        resetSim1Btn.addEventListener('click', () => {
+            car1.classList.remove('moving');
+            isCar1Moving = false;
+            isTimerRunning = false;
+            clearInterval(timerInterval);
+            startCar1Btn.disabled = false;
+            stopwatchBtn.disabled = false;
+            stopwatchBtn.textContent = "Bấm giờ (Bắt đầu/Dừng)";
+            stopwatchDisplay.textContent = "00:00.000";
+            resultSim1.style.display = 'none';
+        });
+
+        // --- PHẦN II: MÔ PHỎNG CỔNG QUANG ĐIỆN ---
+        const car2 = document.getElementById('car2');
+        const startCar2Btn = document.getElementById('start-car2');
+        const photogateDisplay = document.getElementById('photogate-display');
+        const resultSim2 = document.getElementById('result-sim2');
+        const resetSim2Btn = document.getElementById('reset-sim2');
+
+        const actual_t2 = 4.0; // s
+        const timeToGate1 = actual_t2 * 0.1 / 0.8 * 1000; // time = total_time * (pos_gate / total_dist)
+        const timeToGate2 = actual_t2 * 0.9 / 0.8 * 1000;
+
+        startCar2Btn.addEventListener('click', () => {
+            car2.classList.add('moving');
+            startCar2Btn.disabled = true;
+            
+            let pg_startTime, pg_interval;
+            // Bắt đầu đếm giờ khi xe qua cổng 1
+            setTimeout(() => {
+                pg_startTime = Date.now();
+                pg_interval = setInterval(() => {
+                    const elapsed = Date.now() - pg_startTime;
+                    photogateDisplay.textContent = new Date(elapsed).toISOString().slice(14, 23);
+                }, 1);
+            }, timeToGate1);
+            
+            // Dừng đếm giờ khi xe qua cổng 2
+            setTimeout(() => {
+                clearInterval(pg_interval);
+                const measured_t = (Date.now() - pg_startTime) / 1000;
+                photogateDisplay.textContent = new Date(measured_t * 1000).toISOString().slice(14, 23);
+                const measured_v = s / measured_t;
+
+                resultSim2.style.display = 'block';
+                resultSim2.innerHTML = `Đồng hồ đo được: <strong>${measured_t.toFixed(3)} s</strong>.<br>
+                                        Tốc độ tính được: v = s/t = ${s} / ${measured_t.toFixed(3)} ≈ <strong>${measured_v.toFixed(3)} m/s</strong>.`;
+            }, timeToGate2);
+        });
+
+         resetSim2Btn.addEventListener('click', () => {
+            car2.classList.remove('moving');
+            startCar2Btn.disabled = false;
+            photogateDisplay.textContent = "00:00.000";
+            resultSim2.style.display = 'none';
+        });
+
+        // --- PHẦN IV: LUYỆN TẬP ---
+        window.checkEx1 = function() {
+            const userAnswer = parseFloat(document.getElementById('ex1-answer').value);
+            const feedbackEl = document.getElementById('feedback-ex1');
+            const time_s = 1.5 * 60;
+            const correctAnswer = 450 / time_s;
+            if (Math.abs(userAnswer - correctAnswer) < 0.01) {
+                feedbackEl.textContent = `Chính xác! t = 1,5 phút = 90 s. v = s/t = 450/90 = 5 m/s.`;
+                feedbackEl.className = 'feedback correct';
+            } else {
+                feedbackEl.textContent = "Chưa đúng. Bạn có quên đổi 1,5 phút ra giây không?";
+                feedbackEl.className = 'feedback incorrect';
+            }
+        };
+
+        document.querySelectorAll('input[name="ex2"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const feedbackEl = document.getElementById('feedback-ex2');
+                if (this.dataset.correct) {
+                    feedbackEl.textContent = "Đúng! Sai số do phản xạ của người bấm (sai số ngẫu nhiên) thường lớn hơn sai số dụng cụ.";
+                    feedbackEl.className = 'feedback correct';
+                } else {
+                    feedbackEl.textContent = "Chưa chính xác. Hãy xem xét yếu tố nào phụ thuộc vào con người nhất.";
+                    feedbackEl.className = 'feedback incorrect';
+                }
+            });
+        });
+
+        window.toggleSolution = function(id) {
+            const sol = document.getElementById(id);
+            sol.style.display = sol.style.display === 'block' ? 'none' : 'block';
+        };
+
+        // --- FOOTER & BACK-TO-TOP ---
+        const backToTopBtn = document.getElementById("back-to-top-btn");
+        if(backToTopBtn){ window.onscroll = function() { if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) { backToTopBtn.style.display = "block"; } else { backToTopBtn.style.display = "none"; } }; }
+        const yearSpan = document.getElementById('copyright-year');
+        if (yearSpan) { yearSpan.textContent = new Date().getFullYear(); }
+    });
+    </script>
+</body>
+</html>

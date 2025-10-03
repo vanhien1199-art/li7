@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 11: Tốc độ và An toàn giao thông</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <script>
+        window.lessonId = 'toc-do-an-toan-giao-thong';
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatWindow = document.getElementById('chat-window');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const AI_SERVICE_URL = 'https://ai-trung-tam-service.onrender.com';
+            const LESSON_ID = window.lessonId || 'default';
+            if(sendButton){
+                sendButton.addEventListener('click', askAI);
+                userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') askAI(); });
+            }
+            function addMessageToChat(text, className) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('chat-message', className);
+                chatWindow.appendChild(messageElement);
+                messageElement.innerHTML = marked.parse(text);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                return messageElement;
+            }
+            async function askAI() {
+                const question = userInput.value.trim();
+                if (!question) return;
+                addMessageToChat(question, 'user-message');
+                userInput.value = '';
+                const waitingMessage = addMessageToChat('Trợ lý AI đang suy nghĩ...', 'ai-message');
+                try {
+                    const response = await fetch(`${AI_SERVICE_URL}/ask`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ question: question, lesson_id: LESSON_ID })
+                    });
+                    if (!response.ok) throw new Error('Lỗi mạng hoặc server');
+                    const data = await response.json();
+                    waitingMessage.innerHTML = marked.parse(data.answer);
+                } catch (error) {
+                    waitingMessage.innerHTML = marked.parse('**Xin lỗi, đã có lỗi xảy ra!**');
+                }
+            }
+        });
+    </script>
+
+    <style>
+        :root {
+            --primary-color: #c62828; /* Đỏ cảnh báo */
+            --secondary-color: #ffb300; /* Vàng */
+            --bg-color: #fce4ec;
+            --card-bg-color: #ffffff;
+            --text-color: #333;
+            --correct-color: #4caf50;
+            --incorrect-color: #f44336;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.7; background-color: var(--bg-color); color: var(--text-color); margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        header { background-color: var(--primary-color); color: white; padding: 1.5rem 1rem; text-align: center; margin-bottom: 30px; position: relative; }
+        header h1 { margin: 0; font-size: 2.5em; }
+        .card { background-color: var(--card-bg-color); border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); padding: 30px; margin-bottom: 30px; }
+        h2, h3, h4 { color: var(--primary-color); }
+        h2 { border-bottom: 3px solid var(--secondary-color); padding-bottom: 10px; margin-top: 0; }
+        button { background-color: var(--secondary-color); color: var(--text-color); border: none; padding: 10px 20px; font-size: 1em; border-radius: 5px; cursor: pointer; transition: all 0.3s ease; }
+        button:hover { background-color: #ffa000; }
+        
+        .home-btn { position: absolute; top: 50%; left: 20px; transform: translateY(-50%); font-size: 28px; color: white; text-decoration: none; opacity: 0.8; }
+        
+        /* Phần I: Mô phỏng Khoảng cách an toàn */
+        .road-container { position: relative; height: 150px; background-color: #757575; border-radius: 5px; margin: 20px 0; overflow: hidden; border-top: 5px solid #424242; border-bottom: 5px solid #424242; }
+        .road-lines { position: absolute; top: 50%; left: 0; width: 100%; height: 5px; border-top: 5px dashed white; transform: translateY(-50%); }
+        .car-svg { position: absolute; width: 100px; height: 50px; top: 50%; transform: translateY(-50%); transition: left 0.5s ease-out; }
+        #front-car { left: 70%; }
+        #user-car { left: 20%; }
+        #brake-feedback { font-size: 1.5em; font-weight: bold; text-align: center; margin-top: 15px; }
+        .info-box { background-color: #f1f1f1; padding: 15px; border-radius: 5px; margin-top: 15px; }
+        
+        @keyframes crash { 0% { transform: translateY(-50%) translateX(0); } 25% { transform: translateY(-50%) translateX(-5px) rotate(-1deg); } 50% { transform: translateY(-50%) translateX(5px) rotate(1deg); } 75% { transform: translateY(-50%) translateX(-5px) rotate(-1deg); } 100% { transform: translateY(-50%) translateX(0); } }
+        #user-car.crashed { animation: crash 0.5s; }
+        
+        /* Phần IV: Luyện tập */
+        .feedback { margin-top: 10px; font-weight: bold; }
+        .feedback.correct { color: var(--correct-color); }
+        .feedback.incorrect { color: var(--incorrect-color); }
+
+        /* CSS Chatbot, Footer, Back-to-Top */
+        .chat-window { height: 300px; border: 1px solid #ccc; padding: 10px; overflow-y: auto; margin-bottom: 10px; }
+        .chat-message { margin-bottom: 10px; } .user-message { text-align: right; }
+        .ai-message { background-color: #f1f1f1; padding: 10px; border-radius: 8px; display: inline-block; max-width: 90%; text-align: left; }
+        .chat-input-area { display: flex; gap: 10px; } .chat-input-area input { flex-grow: 1; }
+        .site-footer { background-color: #333; color: #f1f1f1; padding: 30px 0; font-size: 0.9em; }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .site-footer h4 { color: var(--secondary-color); } .site-footer ul { list-style-type: none; padding: 0; }
+        .site-footer a { color: #f1f1f1; text-decoration: none; } .site-footer a:hover { color: var(--secondary-color); }
+        #back-to-top-btn { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 999; background-color: var(--secondary-color); color: var(--text-color); cursor: pointer; padding: 10px; border-radius: 50%; font-size: 18px; width: 50px; height: 50px; text-align: center; line-height: 30px; text-decoration: none; border: none;}
+    </style>
+</head>
+<body id="page-top">
+    <header>
+        <a href="/" class="home-btn" title="Về trang chủ">🏠</a>
+        <h1>Bài 11: TỐC ĐỘ VÀ AN TOÀN GIAO THÔNG</h1>
+    </header>
+
+    <div class="container">
+        <section id="phan1" class="card">
+            <h2>Phần I: Mô phỏng "Khoảng cách an toàn"</h2>
+            <p>Hãy điều chỉnh tốc độ của xe bạn (màu xanh) và xem khoảng cách an toàn cần thiết thay đổi như thế nào. Sau đó, hãy thử phanh gấp để kiểm tra!</p>
+            <div class="road-container">
+                <div class="road-lines"></div>
+                <svg id="front-car" class="car-svg" viewBox="0 0 100 50">
+                    <path d="M 10 35 L 20 20 L 80 20 L 90 35 Z" fill="#607d8b"/>
+                    <rect x="0" y="35" width="100" height="10" rx="5" fill="#37474f"/>
+                    <circle cx="25" cy="45" r="7" fill="#212121"/><circle cx="75" cy="45" r="7" fill="#212121"/>
+                </svg>
+                <svg id="user-car" class="car-svg" viewBox="0 0 100 50">
+                    <path d="M 10 35 L 20 20 L 80 20 L 90 35 Z" fill="var(--primary-color)"/>
+                    <rect x="0" y="35" width="100" height="10" rx="5" fill="#0d47a1"/>
+                    <circle cx="25" cy="45" r="7" fill="#212121"/><circle cx="75" cy="45" r="7" fill="#212121"/>
+                </svg>
+            </div>
+            <div class="controls">
+                <label for="speed-slider">Tốc độ của bạn: <span id="speed-value">60</span> km/h</label>
+                <input type="range" id="speed-slider" min="0" max="120" value="60" style="width: 100%;">
+                <div class="info-box">
+                    <p>Khoảng cách an toàn tối thiểu theo quy định: <strong id="legal-distance">35 m</strong></p>
+                    <p>Khoảng cách ước tính theo "Quy tắc 3 giây": <strong id="three-sec-distance">50 m</strong></p>
+                </div>
+                <button id="brake-btn">Thử phanh gấp!</button>
+                <div id="brake-feedback"></div>
+            </div>
+        </section>
+
+        <section id="phan2" class="card">
+            <h2>Phần II: Biểu đồ Tương tác "Thống kê Tai nạn Giao thông tại Việt Nam"</h2>
+            <p>Dưới đây là biểu đồ thể hiện số vụ và số người chết vì tai nạn giao thông (TNGT) đường bộ tại Việt Nam giai đoạn 2016-2020. Hãy di chuột qua các cột để xem số liệu chi tiết.</p>
+            <div>
+                <canvas id="traffic-chart"></canvas>
+            </div>
+        </section>
+
+        <section id="phan3" class="card">
+            <h2>Phần III: Kiến thức cốt lõi cần nhớ</h2>
+            <ul>
+                <li>Luôn tuân thủ quy định về <strong>giới hạn tốc độ</strong> cho từng loại xe và cung đường để đảm bảo an toàn.</li>
+                <li>Luôn giữ <strong>khoảng cách an toàn</strong> với xe chạy liền trước. Khoảng cách này càng lớn khi tốc độ càng cao và khi thời tiết xấu.</li>
+                <li><strong>"Quy tắc 3 giây"</strong> là một phương pháp thực tế hữu ích để ước tính khoảng cách an toàn trong điều kiện thời tiết tốt. Cách thực hiện: Chọn một mốc cố định bên đường. Khi xe trước vừa đi qua mốc, bắt đầu đếm "một giây, hai giây, ba giây". Nếu xe bạn tới mốc trước khi đếm xong, bạn đang ở quá gần.</li>
+            </ul>
+        </section>
+
+        <section id="ai-chatbot-card" class="card">
+            <h3>🤖 Trợ lý AI</h3>
+            <p>Bạn có câu hỏi nào về các quy tắc an toàn giao thông hay cách tính khoảng cách không?</p>
+            <div id="chat-window" class="chat-window"></div>
+            <div class="chat-input-area">
+                <input type="text" id="user-input" placeholder="Ví dụ: Quy tắc 3 giây là gì?">
+                <button id="send-button">Gửi</button>
+            </div>
+        </section>
+
+        <section id="phan4" class="card">
+            <h2>Phần IV: Trắc nghiệm tình huống</h2>
+            <div class="exercise-item">
+                <h4>Câu 1: Bạn đang lái xe với tốc độ trong khoảng 80 km/h đến 100 km/h. Khoảng cách an toàn tối thiểu bạn cần giữ với xe trước là bao nhiêu?</h4>
+                <div><label><input type="radio" name="q1" value="a"> 35 m</label></div>
+                <div><label><input type="radio" name="q1" value="b"> 55 m</label></div>
+                <div><label><input type="radio" name="q1" value="c" data-correct="true"> 70 m</label></div>
+                <div id="feedback-q1" class="feedback"></div>
+            </div>
+            <div class="exercise-item">
+                <h4>Câu 2: Khi xe phía trước vừa đi qua một cột mốc, bạn bắt đầu đếm "một giây, hai giây, ba giây" và xe của bạn cũng vừa tới cột mốc đó. Điều này có nghĩa là gì?</h4>
+                 <div><label><input type="radio" name="q2" value="a"> Bạn đang ở quá xa xe trước.</label></div>
+                <div><label><input type="radio" name="q2" value="b" data-correct="true"> Bạn đang giữ một khoảng cách an toàn (trong điều kiện tốt).</label></div>
+                <div><label><input type="radio" name="q2" value="c"> Bạn đang ở quá gần và cần đi chậm lại.</label></div>
+                <div id="feedback-q2" class="feedback"></div>
+            </div>
+             <div class="exercise-item">
+                <h4>Câu 3: Tại sao xe tải nặng thường có giới hạn tốc độ thấp hơn xe con trên cùng một con đường?</h4>
+                 <div><label><input type="radio" name="q3" value="a"> Vì xe tải gây ô nhiễm nhiều hơn.</label></div>
+                <div><label><input type="radio" name="q3" value="b"> Vì động cơ xe tải yếu hơn.</label></div>
+                <div><label><input type="radio" name="q3" value="c" data-correct="true"> Vì xe tải có quán tính lớn, cần quãng đường dài hơn để phanh dừng lại an toàn.</label></div>
+                <div id="feedback-q3" class="feedback"></div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="site-footer">
+        </footer>
+    <a href="#page-top" id="back-to-top-btn" title="Lên đầu trang">⬆️</a>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- PHẦN I: MÔ PHỎNG KHOẢNG CÁCH AN TOÀN ---
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        const legalDist = document.getElementById('legal-distance');
+        const threeSecDist = document.getElementById('three-sec-distance');
+        const userCar = document.getElementById('user-car');
+        const brakeBtn = document.getElementById('brake-btn');
+        const brakeFeedback = document.getElementById('brake-feedback');
+        
+        const safeDistanceTable = [ // Dữ liệu từ Bảng 11.1
+            { maxSpeed: 60, distance: 35 },
+            { maxSpeed: 80, distance: 55 },
+            { maxSpeed: 100, distance: 70 },
+            { maxSpeed: 120, distance: 100 }
+        ];
+
+        function getLegalDistance(speed) {
+            for (const rule of safeDistanceTable) {
+                if (speed <= rule.maxSpeed) return rule.distance;
+            }
+            return 100; // Mặc định cho tốc độ > 100
+        }
+
+        function updateSimulation() {
+            const speed_kmh = parseInt(speedSlider.value);
+            speedValue.textContent = speed_kmh;
+            
+            // Tính toán
+            const speed_ms = speed_kmh / 3.6;
+            const legal_dist_m = getLegalDistance(speed_kmh);
+            const three_sec_dist_m = speed_ms * 3;
+            
+            // Cập nhật thông tin
+            legalDist.textContent = `${legal_dist_m} m`;
+            threeSecDist.textContent = `${three_sec_dist_m.toFixed(0)} m`;
+            
+            // Cập nhật vị trí xe (giả lập)
+            // Giả sử xe trước ở 70%, khoảng cách 100m tương ứng với 50% chiều dài đường
+            const maxDistPercentage = 50; 
+            const currentDistPercentage = Math.min((three_sec_dist_m / 100) * maxDistPercentage, maxDistPercentage);
+            userCar.style.left = `${70 - currentDistPercentage}%`;
+        }
+
+        brakeBtn.addEventListener('click', () => {
+            const speed_kmh = parseInt(speedSlider.value);
+            const legal_dist_m = getLegalDistance(speed_kmh);
+            
+            const frontCarPos = parseFloat(document.getElementById('front-car').style.left);
+            const userCarPos = parseFloat(userCar.style.left);
+            // Quy đổi % sang mét (giả lập: 50% chiều dài đường = 100m)
+            const current_dist_m = (frontCarPos - userCarPos) / 50 * 100;
+
+            userCar.classList.remove('crashed'); // Reset animation
+            void userCar.offsetWidth; // Trigger reflow
+
+            if (current_dist_m >= legal_dist_m) {
+                brakeFeedback.textContent = "An toàn!";
+                brakeFeedback.style.color = 'var(--correct-color)';
+            } else {
+                brakeFeedback.textContent = "Nguy hiểm! Bạn đã không giữ khoảng cách an toàn.";
+                brakeFeedback.style.color = 'var(--incorrect-color)';
+                userCar.classList.add('crashed');
+            }
+        });
+
+        speedSlider.addEventListener('input', updateSimulation);
+        updateSimulation(); // Chạy lần đầu
+
+        // --- PHẦN II: BIỂU ĐỒ ---
+        const ctx = document.getElementById('traffic-chart').getContext('2d');
+        const trafficChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['2016', '2017', '2018', '2019', '2020'],
+                datasets: [
+                    {
+                        label: 'Số vụ TNGT',
+                        data: [21589, 20280, 18736, 17626, 14510],
+                        backgroundColor: 'rgba(33, 150, 243, 0.7)', // Màu xanh
+                    },
+                    {
+                        label: 'Số người chết',
+                        data: [8685, 8279, 8248, 7624, 6700],
+                        backgroundColor: 'rgba(255, 193, 7, 0.7)', // Màu vàng
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Thống kê TNGT đường bộ Việt Nam (2016-2020)'
+                    }
+                }
+            }
+        });
+        
+        // --- PHẦN IV: TRẮC NGHIỆM ---
+        document.querySelectorAll('#phan4 input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const name = this.name;
+                const feedbackEl = document.getElementById('feedback-' + name);
+                if (this.dataset.correct) {
+                    feedbackEl.textContent = "Chính xác!";
+                    feedbackEl.className = 'feedback correct';
+                } else {
+                    feedbackEl.textContent = "Chưa đúng, hãy suy nghĩ lại.";
+                    feedbackEl.className = 'feedback incorrect';
+                }
+            });
+        });
+
+        // --- FOOTER & BACK-TO-TOP ---
+        const backToTopBtn = document.getElementById("back-to-top-btn");
+        if(backToTopBtn){ window.onscroll = () => { backToTopBtn.style.display = (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) ? "block" : "none"; }; }
+        const footer = document.querySelector('.site-footer');
+        if (footer) footer.innerHTML = `<div class="container"><div class="footer-grid"><div><h4>Nguồn tham khảo</h4><ul><li>Sách giáo khoa KHTN 7 - Bộ sách Kết nối tri thức.</li></ul></div><div><h4>Về trang web</h4><ul><li><a href="/">Về trang danh sách học liệu</a></li></ul></div><div><h4>Bản quyền & Liên hệ</h4><p>&copy; <span id="copyright-year">${new Date().getFullYear()}</span>-nungvanhien</p><p>Góp ý: <a href="mailto:gopy@example.com">vanhien1199</a></p></div></div></div>`;
+    });
+    </script>
+</body>
+</html>

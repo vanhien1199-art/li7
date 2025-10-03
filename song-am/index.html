@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 12: Sóng âm</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <script>
+        window.lessonId = 'song-am';
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatWindow = document.getElementById('chat-window');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const AI_SERVICE_URL = 'https://ai-trung-tam-service.onrender.com';
+            const LESSON_ID = window.lessonId || 'default';
+            if(sendButton){
+                sendButton.addEventListener('click', askAI);
+                userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') askAI(); });
+            }
+            function addMessageToChat(text, className) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('chat-message', className);
+                chatWindow.appendChild(messageElement);
+                messageElement.innerHTML = marked.parse(text);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                return messageElement;
+            }
+            async function askAI() {
+                const question = userInput.value.trim();
+                if (!question) return;
+                addMessageToChat(question, 'user-message');
+                userInput.value = '';
+                const waitingMessage = addMessageToChat('Trợ lý AI đang suy nghĩ...', 'ai-message');
+                try {
+                    const response = await fetch(`${AI_SERVICE_URL}/ask`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ question: question, lesson_id: LESSON_ID })
+                    });
+                    if (!response.ok) throw new Error('Lỗi mạng hoặc server');
+                    const data = await response.json();
+                    waitingMessage.innerHTML = marked.parse(data.answer);
+                } catch (error) {
+                    waitingMessage.innerHTML = marked.parse('**Xin lỗi, đã có lỗi xảy ra!**');
+                }
+            }
+        });
+    </script>
+
+    <style>
+        :root {
+            --primary-color: #8e24aa; /* Tím */
+            --secondary-color: #00acc1; /* Xanh lơ */
+            --bg-color: #f3e5f5;
+            --card-bg-color: #ffffff;
+            --text-color: #333;
+            --correct-color: #4caf50;
+            --incorrect-color: #f44336;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.7; background-color: var(--bg-color); color: var(--text-color); margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        header { background-color: var(--primary-color); color: white; padding: 1.5rem 1rem; text-align: center; margin-bottom: 30px; position: relative; }
+        header h1 { margin: 0; font-size: 2.5em; }
+        .card { background-color: var(--card-bg-color); border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); padding: 30px; margin-bottom: 30px; }
+        h2, h3, h4 { color: var(--primary-color); }
+        h2 { border-bottom: 3px solid var(--secondary-color); padding-bottom: 10px; margin-top: 0; }
+        button { background-color: var(--secondary-color); color: white; border: none; padding: 10px 20px; font-size: 1em; border-radius: 5px; cursor: pointer; transition: all 0.3s ease; }
+        button:hover { background-color: #0097a7; }
+        
+        .home-btn { position: absolute; top: 50%; left: 20px; transform: translateY(-50%); font-size: 28px; color: white; text-decoration: none; opacity: 0.8; }
+        
+        /* Phần I: PhET */
+        .phet-container { border: 2px solid var(--primary-color); border-radius: 8px; overflow: hidden; margin-top: 20px; }
+        .phet-container iframe { display: block; border: none; }
+        
+        /* Phần II: Thí nghiệm Chuông trong bình chân không */
+        .bell-jar-sim { text-align: center; }
+        .sim-container { position: relative; width: 300px; height: 350px; margin: 20px auto; background-color: #f0f0f0; border-radius: 5px; display: flex; justify-content: center; align-items: center; }
+        .bell-jar { width: 200px; height: 300px; border: 5px solid #90a4ae; background-color: rgba(207, 216, 220, 0.3); border-bottom: none; border-radius: 100px 100px 0 0; position: absolute; bottom: 0; }
+        .bell { width: 50px; height: 50px; background-color: #ffeb3b; border-radius: 50% 50% 0 0; position: relative; z-index: 1; }
+        .bell.ringing { animation: shake 0.2s infinite; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+        .sound-wave { position: absolute; border: 2px solid var(--secondary-color); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0; transition: opacity 1s ease-out; }
+        .bell.ringing .sound-wave { animation: ripple 1.5s infinite; }
+        #wave1 { width: 80px; height: 80px; }
+        #wave2 { width: 120px; height: 120px; animation-delay: 0.5s !important; }
+        #wave3 { width: 160px; height: 160px; animation-delay: 1s !important; }
+        @keyframes ripple { from { transform: translate(-50%, -50%) scale(0.5); opacity: 0.8; } to { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
+        .pumping .sound-wave { opacity: 0 !important; animation: none !important; }
+        
+        /* Phần IV: Luyện tập */
+        .feedback { margin-top: 10px; font-weight: bold; }
+        .feedback.correct { color: var(--correct-color); }
+        .feedback.incorrect { color: var(--incorrect-color); }
+        .dnd-container { display: flex; gap: 20px; margin-top: 20px; }
+        .dnd-source, .dnd-target { border: 2px dashed #ccc; padding: 15px; border-radius: 8px; width: 48%; min-height: 150px; }
+        .draggable { background-color: #e0e0e0; padding: 8px 12px; margin: 8px 0; border-radius: 5px; cursor: grab; }
+        .dnd-target.over { background-color: #e0f2f1; }
+        .solution { display: none; margin-top: 10px; background-color: #f9f9f9; padding: 10px; }
+
+        /* CSS Chatbot, Footer, Back-to-Top */
+        .chat-window { height: 300px; border: 1px solid #ccc; padding: 10px; overflow-y: auto; margin-bottom: 10px; }
+        .chat-message { margin-bottom: 10px; } .user-message { text-align: right; }
+        .ai-message { background-color: #f1f1f1; padding: 10px; border-radius: 8px; display: inline-block; max-width: 90%; text-align: left; }
+        .chat-input-area { display: flex; gap: 10px; } .chat-input-area input { flex-grow: 1; }
+        .site-footer { background-color: #333; color: #f1f1f1; padding: 30px 0; font-size: 0.9em; }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .site-footer h4 { color: var(--secondary-color); } .site-footer ul { list-style-type: none; padding: 0; }
+        .site-footer a { color: #f1f1f1; text-decoration: none; } .site-footer a:hover { color: var(--secondary-color); }
+        #back-to-top-btn { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 999; background-color: var(--secondary-color); color: var(--text-color); cursor: pointer; padding: 10px; border-radius: 50%; font-size: 18px; width: 50px; height: 50px; text-align: center; line-height: 30px; text-decoration: none; border: none;}
+    </style>
+</head>
+<body id="page-top">
+    <header>
+        <a href="/" class="home-btn" title="Về trang chủ">🏠</a>
+        <h1>Bài 12: SÓNG ÂM</h1>
+    </header>
+
+    <div class="container">
+        <section id="phan1" class="card">
+            <h2>Phần I: Khám phá Sóng âm với PhET</h2>
+            <p>Sử dụng mô phỏng PhET, hãy quan sát cách chiếc loa dao động để tạo ra sóng âm. Các hạt không khí đã truyền dao động đó đến tai người nghe như thế nào?</p>
+            <div class="phet-container">
+                <iframe src="https://phet.colorado.edu/sims/html/sound/latest/sound_vi.html" width="100%" height="500px" allowfullscreen></iframe>
+            </div>
+        </section>
+
+        <section id="phan2" class="card">
+            <h2>Phần II: Thí nghiệm ảo "Chuông trong bình chân không"</h2>
+            <div class="bell-jar-sim" id="bell-jar-container">
+                <div class="sim-container">
+                    <div class="bell-jar"></div>
+                    <div class="bell" id="bell">
+                        <div class="sound-wave" id="wave1"></div>
+                        <div class="sound-wave" id="wave2"></div>
+                        <div class="sound-wave" id="wave3"></div>
+                    </div>
+                </div>
+                <div class="controls">
+                    <button id="toggle-bell-btn">Bật chuông</button>
+                    <button id="pump-vacuum-btn">Hút chân không</button>
+                    <button id="reset-sim-btn">Làm lại</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="phan3" class="card">
+            <h2>Phần III: Kiến thức cốt lõi cần nhớ</h2>
+            <ul>
+                <li>Các vật phát ra âm thanh (gọi là nguồn âm) đều <strong>dao động</strong>.</li>
+                <li><strong>Sóng âm</strong> là sự lan truyền dao động âm trong các môi trường.</li>
+                <li>Sóng âm có thể truyền được trong môi trường chất <strong>rắn, lỏng, khí</strong>.</li>
+                <li>Sóng âm <strong>không thể</strong> truyền được trong <strong>chân không</strong>.</li>
+            </ul>
+        </section>
+
+        <section id="ai-chatbot-card" class="card">
+            <h3>🤖 Trợ lý AI</h3>
+            <p>Bạn có thắc mắc gì về sóng âm hay sự truyền âm không?</p>
+            <div id="chat-window" class="chat-window"></div>
+            <div class="chat-input-area">
+                <input type="text" id="user-input" placeholder="Ví dụ: Tại sao trong vũ trụ lại yên tĩnh?">
+                <button id="send-button">Gửi</button>
+            </div>
+        </section>
+
+        <section id="phan4" class="card">
+            <h2>Phần IV: Luyện tập</h2>
+            <div class="exercise-item">
+                <h4>Bài 1 (Trắc nghiệm):</h4>
+                <p>Khi bạn gảy một dây đàn guitar, bộ phận nào dao động trực tiếp để phát ra âm thanh?</p>
+                <div><label><input type="radio" name="ex1" value="a"> Thùng đàn.</label></div>
+                <div><label><input type="radio" name="ex1" value="b" data-correct="true"> Dây đàn.</label></div>
+                <div><label><input type="radio" name="ex1" value="c"> Không khí xung quanh đàn.</label></div>
+                <div id="feedback-ex1" class="feedback"></div>
+            </div>
+            <div class="exercise-item">
+                <h4>Bài 2 (Kéo-Thả):</h4>
+                <p>Hãy kéo các môi trường sau vào cột tương ứng.</p>
+                <div class="dnd-container">
+                    <div class="dnd-source">
+                        <h5>Các môi trường</h5>
+                        <div class="draggable" draggable="true" data-target="can-transmit">Nước sông</div>
+                        <div class="draggable" draggable="true" data-target="cannot-transmit">Khoảng không vũ trụ</div>
+                        <div class="draggable" draggable="true" data-target="can-transmit">Không khí</div>
+                        <div class="draggable" draggable="true" data-target="can-transmit">Thanh sắt</div>
+                    </div>
+                    <div class="dnd-target" id="can-transmit"><h4>Truyền được âm thanh</h4></div>
+                    <div class="dnd-target" id="cannot-transmit"><h4>Không truyền được âm thanh</h4></div>
+                </div>
+            </div>
+            <div class="exercise-item">
+                <h4>Bài 3 (Vận dụng):</h4>
+                <p>Tại sao khi áp tai vào tường, ta có thể nghe thấy tiếng động ở phòng bên cạnh rõ hơn so với khi đứng giữa phòng?</p>
+                <button onclick="toggleSolution('sol3')">Xem giải thích</button>
+                <div class="solution" id="sol3"><p>Vì âm thanh truyền được trong chất rắn. Bức tường là môi trường rắn, truyền âm tốt hơn không khí (chất khí). Khi áp tai vào tường, sóng âm từ phòng bên cạnh truyền qua tường trực tiếp đến tai ta, ít bị phân tán và suy yếu hơn so với khi truyền qua không khí.</p></div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="site-footer">
+        </footer>
+    <a href="#page-top" id="back-to-top-btn" title="Lên đầu trang">⬆️</a>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- PHẦN II: THÍ NGHIỆM CHUÔNG TRONG BÌNH CHÂN KHÔNG ---
+        const bell = document.getElementById('bell');
+        const simContainer = document.getElementById('bell-jar-container');
+        const toggleBellBtn = document.getElementById('toggle-bell-btn');
+        const pumpVacuumBtn = document.getElementById('pump-vacuum-btn');
+        const resetSimBtn = document.getElementById('reset-sim-btn');
+
+        toggleBellBtn.addEventListener('click', () => {
+            bell.classList.toggle('ringing');
+            toggleBellBtn.textContent = bell.classList.contains('ringing') ? 'Tắt chuông' : 'Bật chuông';
+        });
+        pumpVacuumBtn.addEventListener('click', () => {
+            if (bell.classList.contains('ringing')) {
+                simContainer.classList.add('pumping');
+            } else {
+                alert('Hãy bật chuông trước khi hút chân không!');
+            }
+        });
+        resetSimBtn.addEventListener('click', () => {
+            bell.classList.remove('ringing');
+            simContainer.classList.remove('pumping');
+            toggleBellBtn.textContent = 'Bật chuông';
+        });
+
+        // --- PHẦN IV: LUYỆN TẬP ---
+        // Trắc nghiệm
+        document.querySelectorAll('input[name="ex1"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const feedback = document.getElementById('feedback-ex1');
+                if (this.dataset.correct) {
+                    feedback.textContent = 'Chính xác! Dây đàn dao động và tạo ra sóng âm.';
+                    feedback.className = 'feedback correct';
+                } else {
+                    feedback.textContent = 'Chưa đúng. Nguồn âm chính là vật dao động ban đầu.';
+                    feedback.className = 'feedback incorrect';
+                }
+            });
+        });
+        // Kéo thả
+        let draggedItem = null;
+        document.querySelectorAll('.draggable').forEach(item => {
+            item.addEventListener('dragstart', e => { draggedItem = e.target; });
+        });
+        document.querySelectorAll('.dnd-target').forEach(zone => {
+            zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.classList.remove('over');
+                if (zone.id === draggedItem.dataset.target) {
+                    zone.appendChild(draggedItem);
+                    draggedItem.style.backgroundColor = 'var(--correct-color)';
+                    draggedItem.style.color = 'white';
+                }
+            });
+        });
+        // Giải thích
+        window.toggleSolution = function(id) {
+            const sol = document.getElementById(id);
+            sol.style.display = sol.style.display === 'block' ? 'none' : 'block';
+        };
+
+        // --- FOOTER & BACK-TO-TOP ---
+        const backToTopBtn = document.getElementById("back-to-top-btn");
+        if(backToTopBtn){ window.onscroll = () => { backToTopBtn.style.display = (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) ? "block" : "none"; }; }
+        const footer = document.querySelector('.site-footer');
+        if (footer) footer.innerHTML = `<div class="container"><div class="footer-grid"><div><h4>Nguồn tham khảo</h4><ul><li>Sách giáo khoa KHTN 7 - Bộ sách Kết nối tri thức.</li><li>PhET Interactive Simulations.</li></ul></div><div><h4>Về trang web</h4><ul><li><a href="/">Về trang danh sách học liệu</a></li></ul></div><div><h4>Bản quyền & Liên hệ</h4><p>&copy; <span id="copyright-year">${new Date().getFullYear()}</span>-nungvanhien</p><p>Góp ý: <a href="mailto:gopy@example.com">vanhien1199</a></p></div></div></div>`;
+    });
+    </script>
+</body>
+</html>
