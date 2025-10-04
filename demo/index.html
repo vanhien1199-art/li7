@@ -5,7 +5,14 @@
   <title>Thử Chatbot AI</title>
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
-    #chat-window { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; margin-bottom: 10px; background: #fff; }
+    #chat-window {
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      background: #fff;
+    }
     .chat-message { margin-bottom: 10px; }
     .user-message { text-align: right; color: blue; }
     .ai-message { text-align: left; color: green; }
@@ -39,8 +46,10 @@
     async function askAI() {
       const question = userInput.value.trim();
       if (!question) return;
+
       addMessage(question, 'user-message');
       userInput.value = '';
+
       const waiting = document.createElement('div');
       waiting.className = 'chat-message ai-message';
       waiting.textContent = 'Đang suy nghĩ...';
@@ -52,6 +61,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question, lesson_id: LESSON_ID })
         });
+
         const data = await response.json();
         waiting.textContent = data.answer || 'Không có phản hồi từ AI.';
       } catch (err) {
