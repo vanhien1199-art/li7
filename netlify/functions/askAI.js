@@ -45,7 +45,7 @@ exports.handler = async function (event, context) {
   const prompt = `${lessonPrompts[lesson_id] || lessonPrompts.default}\n\nCâu hỏi: ${question}`;
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image-preview" });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
@@ -65,3 +65,4 @@ exports.handler = async function (event, context) {
     };
   }
 };
+
