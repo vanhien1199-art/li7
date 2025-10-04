@@ -53,7 +53,7 @@ exports.handler = async function(event, context) {
     // 3. Khối try...catch chính để gọi API và xử lý lỗi
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image-preview" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const systemPrompt = lessonPrompts[lesson_id] || lessonPrompts['default'];
         const fullPrompt = `${systemPrompt}\n\nCâu hỏi của học sinh: "${question}"`;
@@ -109,4 +109,5 @@ exports.handler = async function(event, context) {
         };
     }
 };
+
 
